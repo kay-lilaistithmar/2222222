@@ -35,14 +35,72 @@ window.adminLogin = function() {
     const storedPass = localStorage.getItem('admin_password') || ADMIN_AUTH.pass;
 
     if (email === ADMIN_AUTH.email && pass === storedPass) {
+        
+        // 1. تشغيل الموسيقى (من الثانية 45 + تلاشي تدريجي)
+        const audio = document.getElementById('loginMusic');
+        if(audio) {
+            audio.currentTime = 45; // البدء من الثانية 45
+            audio.volume = 0; // البدء بصوت 0
+            audio.play().then(() => {
+                // كود التلاشي التدريجي (Fade In) خلال 3 ثواني
+                let vol = 0;
+                const targetVol = 0.8; // الهدف 80%
+                const fadeDuration = 3000; 
+                const intervalTime = 100;
+                const step = targetVol / (fadeDuration / intervalTime);
+
+                const fadeTimer = setInterval(() => {
+                    vol += step;
+                    if(vol >= targetVol) {
+                        vol = targetVol;
+                        clearInterval(fadeTimer);
+                    }
+                    audio.volume = vol;
+                }, intervalTime);
+
+            }).catch(e => console.log("Audio Error:", e));
+        }
+
+        // 2. إخفاء مودال التسجيل
         document.getElementById('adminLoginModal').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        document.getElementById('bottomNav').style.display = 'flex'; // إظهار الشريط السفلي
-        renderPlans(); 
-        renderNotes();
-        listenToWithdrawals(); 
-        listenToSupport(); 
-        loadSettings(); 
+
+        // 3. إظهار شاشة البداية
+        const intro = document.getElementById('introOverlay');
+        const textDiv = document.getElementById('introText');
+        const countDiv = document.getElementById('introCount');
+        
+        intro.style.display = 'flex';
+
+        // عرض كلمة أحبك لمدة 3 ثواني
+        setTimeout(() => {
+            textDiv.style.display = 'none'; 
+            countDiv.style.display = 'block'; 
+            
+            let count = 3;
+            countDiv.innerText = count;
+
+            const timer = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    countDiv.innerText = count;
+                } else {
+                    clearInterval(timer);
+                    // انتهاء العد
+                    intro.style.display = 'none'; 
+                    
+                    // الدخول للنظام
+                    document.getElementById('adminPanel').style.display = 'block';
+                    document.getElementById('bottomNav').style.display = 'flex'; 
+                    renderPlans(); 
+                    renderNotes();
+                    listenToWithdrawals(); 
+                    listenToSupport(); 
+                    loadSettings(); 
+                }
+            }, 1000); 
+
+        }, 3000); 
+
     } else {
         document.getElementById('loginError').style.display = 'block';
     }
